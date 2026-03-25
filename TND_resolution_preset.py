@@ -1,3 +1,5 @@
+import math
+
 class ResolutionPresetNode:
     def __init__(self):
         pass
@@ -11,36 +13,39 @@ class ResolutionPresetNode:
             },
         }
 
-    RETURN_TYPES = ("STRING", "INT", "INT")
-    RETURN_NAMES = ("resolution_label", "width", "height")
-    FUNCTION = "identify"
+    RETURN_TYPES = ("STRING", "INT", "FLOAT", "STRING")
+    RETURN_NAMES = ("res_label", "equivalent_p", "megapixels", "summary")
+    FUNCTION = "analyze"
     CATEGORY = "utils"
 
-    def identify(self, width, height):
-        # 使用长边 (Long Side) 作为判断基准
-        long_side = max(width, height)
+    def analyze(self, width, height):
+        pixels = width * height
+        megapixels = round(pixels / 1000000, 2)
         
-        # 根据工业标准长边进行区间划分 (取中值作为切换点)
-        # 480p 宽通常是 854
-        # 720p 宽通常是 1280
-        # 1080p 宽通常是 1920
-        # 2K 宽通常是 2560
-        # 4K 宽通常是 3840
+        # 核心算法：计算等效 16:9 的高度 (Effective P)
+        # 公式：Height_eff = sqrt(Total_Pixels * 9 / 16)
+        eff_p = int(math.sqrt(pixels * 9 / 16))
         
-        if long_side <= 1000:       # 接近 854
-            res_label = "480p"
-        elif long_side <= 1500:     # 接近 1280 (你提到的 960x1280 就在这个区间)
-            res_label = "720p"
-        elif long_side <= 2200:     # 接近 1920
-            res_label = "1080p"
-        elif long_side <= 3200:     # 接近 2560
-            res_label = "2K"
-        elif long_side <= 5000:     # 接近 3840
-            res_label = "4K"
+        # 定义标准梯队 (采用行业公认的切换点)
+        if eff_p < 400:
+            label = "360p"
+        elif eff_p < 600:
+            label = "480p"
+        elif eff_p < 900:
+            label = "720p"
+        elif eff_p < 1260:
+            label = "1080p"
+        elif eff_p < 1800:
+            label = "2K (1440p)"
+        elif eff_p < 3000:
+            label = "4K (2160p)"
         else:
-            res_label = "8K+"
+            label = "8K+"
             
-        return (res_label, width, height)
+        summary = f"{label} | {eff_p}p | {megapixels}MP"
+            
+        return (label, eff_p, megapixels, summary)
+
 
 # 导出节点映射
 NODE_CLASS_MAPPINGS = {
