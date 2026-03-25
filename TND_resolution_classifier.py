@@ -28,13 +28,13 @@ class ResolutionClassifier:
         long_edge = max(width, height)
 
         if long_edge < 1920:
-            label = "1K"
+            label = "1k"
         elif long_edge < 2560:
-            label = "2K"
+            label = "2k"
         elif long_edge < 3840:
-            label = "3K"
+            label = "3k"
         else:
-            label = "4K"
+            label = "4k"
 
         return (label, long_edge)
 
